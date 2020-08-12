@@ -13,6 +13,7 @@ $(function () {
 
     // 从 Layui 中获取form对象
     var form = layui.form
+    var layer = layui.layer
     // 通过 form.verify() 函数自定义校验规则
     form.verify({
         // 自定义了一个叫做 pwd 的校验规则
@@ -35,11 +36,42 @@ $(function () {
         // 1.阻止默认行为的提交
         e.preventDefault()
         // 2.发起ajax的post请求
-        $.post('http://ajax.frontend.itheima.net/api/reguser', { username: $('#form_re [name=username]').val(), password: $('#form_reg [name=password]').val() }, function (res) {
+        var data = { username: $('#form_reg [name=username]').val(), password: $('#form_reg [name=password]').val() }
+
+        $.post('/api/reguser', data, function (res) {
             if (res.status !== 0) {
-                return console.log(res.message);
+                return layer.msg(res.message);
             }
-            console.log('注册成功');
+            layer.msg('注册成功,请登录')
+
+            //模拟人的点击行为
+            $("#link_login").click()
+        })
+    })
+
+    // 监听登录表单的提交事件
+    $('#form_login').on('submit', function (e) {
+        // 1.阻止默认提交行为
+        e.preventDefault()
+        // 2.发起ajax的post请求
+        $.ajax({
+            url: '/api/login',
+            method: 'POST',
+            // 快速获取表单中的数据
+            data: $(this).serialize(),
+            success: function (res) {
+                if (res.status !== 0) {
+                    return layer.msg('登录失败')
+                }
+                layer.msg('登录成功')
+                console.log(res.token);
+
+                // 将登录成功得到的 token 字符串，保存到 localStorage 中
+                localStorage.setItem('token', res.token)
+
+                // 跳转到后台主页
+                location.href = '/index.html'
+            }
         })
     })
 })
